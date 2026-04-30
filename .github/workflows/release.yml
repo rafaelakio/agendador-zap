@@ -1,0 +1,78 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-release:
+    name: 🚀 Build Release
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v3
+      
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: ☕ Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+      
+      - name: 📥 Install dependencies
+        run: npm ci
+      
+      - name: 🔧 Setup Android SDK
+        uses: android-actions/setup-android@v2
+      
+      - name: 🏗️ Build Android Release APK
+        run: |
+          cd android
+          ./gradlew assembleRelease
+      
+      - name: 🏗️ Build Android Release AAB
+        run: |
+          cd android
+          ./gradlew bundleRelease
+      
+      - name: 📝 Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+      
+      - name: 📤 Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            android/app/build/outputs/apk/release/app-release.apk
+            android/app/build/outputs/bundle/release/app-release.aab
+          body: |
+            ## 🎉 Release ${{ steps.version.outputs.VERSION }}
+            
+            ### 📦 Downloads
+            - **APK**: Para instalação direta
+            - **AAB**: Para publicação na Google Play Store
+            
+            ### 📝 Changelog
+            Veja o [CHANGELOG.md](CHANGELOG.md) para detalhes das mudanças.
+            
+            ### 🔧 Instalação
+            1. Baixe o APK
+            2. Habilite "Fontes desconhecidas" nas configurações
+            3. Instale o APK
+            
+            ### ⚠️ Notas
+            - Requer Android 7.0 ou superior
+            - WhatsApp deve estar instalado
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+# Made with Bob
