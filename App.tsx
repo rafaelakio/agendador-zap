@@ -11,7 +11,8 @@ import { whatsappService } from './src/services/whatsappService';
 const App: React.FC = () => {
   useEffect(() => {
     requestPermissions();
-    setupNotificationHandlers();
+    const unsubscribe = setupForegroundNotificationHandler();
+    return () => unsubscribe();
   }, []);
 
   const requestPermissions = async () => {
@@ -22,25 +23,8 @@ const App: React.FC = () => {
     }
   };
 
-  const setupNotificationHandlers = () => {
-    // Handle notification press when app is in foreground or background
-    notifee.onForegroundEvent(async ({ type, detail }) => {
-      if (type === EventType.PRESS || type === EventType.ACTION_PRESS) {
-        const { notification } = detail;
-        if (notification?.data) {
-          const { contactPhone, message } = notification.data;
-          if (contactPhone && message) {
-            await whatsappService.sendMessage(
-              contactPhone as string,
-              message as string
-            );
-          }
-        }
-      }
-    });
-
-    // Handle notification press when app is closed/killed
-    notifee.onBackgroundEvent(async ({ type, detail }) => {
+  const setupForegroundNotificationHandler = () => {
+    return notifee.onForegroundEvent(async ({ type, detail }) => {
       if (type === EventType.PRESS || type === EventType.ACTION_PRESS) {
         const { notification } = detail;
         if (notification?.data) {
