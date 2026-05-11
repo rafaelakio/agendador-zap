@@ -26,7 +26,6 @@ export const MessagesProvider: React.FC<MessagesProviderProps> = ({ children }) 
 
   useEffect(() => {
     loadMessages();
-    setupNotificationHandler();
   }, []);
 
   const loadMessages = async () => {
@@ -39,11 +38,6 @@ export const MessagesProvider: React.FC<MessagesProviderProps> = ({ children }) 
     } finally {
       setLoading(false);
     }
-  };
-
-  const setupNotificationHandler = () => {
-    // Handle notification actions
-    notificationService.requestPermission();
   };
 
   const addMessage = async (messageData: Omit<ScheduledMessage, 'id' | 'createdAt'>) => {
